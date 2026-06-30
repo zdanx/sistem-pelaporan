@@ -23,27 +23,78 @@ function initAplikasi() {
 
     // LOGIKA KHUSUS HALAMAN PELAPOR (Orang A)
     if (formLaporan) {
-        // Otomatis minta akses lokasi saat halaman dimuat
+        const statusLokasiKontainer = document.getElementById("statusLokasiKontainer");
+        const statusLokasiTeks = document.getElementById("statusLokasiTeks");
+        const statusIcon = document.getElementById("statusIcon");
+        const btnMintaLokasiManual = document.getElementById("btnMintaLokasiManual");
+
+        // Otomatis minta akses lokasi saat halaman pertama kali dimuat
         mintaAksesLokasi();
 
         function mintaAksesLokasi() {
             if (navigator.geolocation) {
+                // Tampilkan status sedang memproses lokasi
+                statusLokasiTeks.innerText = "Sedang mengunci lokasi GPS...";
+                statusIcon.innerText = "⏳";
+                
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
+                        // JIKA BERHASIL (User klik Allow)
                         document.getElementById("lat").value = position.coords.latitude;
                         document.getElementById("lng").value = position.coords.longitude;
                         console.log("Lokasi berhasil dikunci:", position.coords.latitude, position.coords.longitude);
+                        
+                        // Ubah tampilan menjadi Centang Hijau sukses
+                        statusLokasiKontainer.style.backgroundColor = "#f0fdf4";
+                        statusLokasiKontainer.style.borderColor = "#bbf7d0";
+                        statusLokasiTeks.innerText = "Lokasi GPS berhasil dibagikan ✓";
+                        statusLokasiTeks.style.color = "#166534";
+                        statusIcon.innerText = "✅";
+                        btnMintaLokasiManual.style.display = "none"; // Sembunyikan tombol karena sudah sukses
                     },
                     (error) => {
+                        // JIKA GAGAL atau USER KLIk BLOCK / NOT ALLOWED
                         console.error("Gagal mendapatkan lokasi GPS:", error.message);
+                        
+                        statusLokasiKontainer.style.backgroundColor = "#fef2f2";
+                        statusLokasiKontainer.style.borderColor = "#fee2e2";
+                        statusLokasiTeks.style.color = "#991b1b";
+                        statusIcon.innerText = "❌";
+                        btnMintaLokasiManual.style.display = "block";
+
+                        if (error.code === error.PERMISSION_DENIED) {
+                            statusLokasiTeks.innerText = "Izin lokasi diblokir browser. Klik tombol untuk panduan.";
+                        } else {
+                            statusLokasiTeks.innerText = "Gagal mengambil GPS. Pastikan GPS HP Anda aktif.";
+                        }
                     },
-                    { enableHighAccuracy: true }
+                    { enableHighAccuracy: true, timeout: 10000 }
                 );
             } else {
-                console.log("Browser tidak mendukung Geolocation.");
+                statusLokasiTeks.innerText = "Browser tidak mendukung Geolocation.";
+                btnMintaLokasiManual.style.display = "none";
             }
         }
 
+        // AKSI TOMBOL MANUAL JIKA DIKLIK OLEH PENGGUNA
+        btnMintaLokasiManual.addEventListener("click", () => {
+            // Cek status izin menggunakan Permissions API jika didukung browser
+            if (navigator.permissions) {
+                navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+                    if (result.state === 'denied') {
+                        // Jika terlanjur di-Block permanen di Chrome, ingatkan cara buka manual
+                        alert("Akses lokasi diblokir oleh Chrome Anda.\n\nSilakan klik ikon gembok/pengatur di kiri kolom alamat URL atas, lalu ubah izin 'Location' menjadi 'Allow', kemudian refresh halaman.");
+                    } else {
+                        // Jika statusnya belum diizinkan biasa, pemicu pop-up akan muncul lagi
+                        mintaAksesLokasi();
+                    }
+                });
+            } else {
+                mintaAksesLokasi();
+            }
+        });
+
+        // Bagian logika kamera dan input file di bawahnya (tetap sama seperti sebelumnya)
         const btnKamera = document.getElementById("btnKamera");
         const btnGaleri = document.getElementById("btnGaleri");
         const fotoKamera = document.getElementById("fotoKamera");
@@ -54,7 +105,6 @@ function initAplikasi() {
             btnGaleri.addEventListener("click", () => fotoGaleri.click());
         }
 
-        // FUNGSI KOMPRESI GAMBAR OTOMATIS (< 1MB)
         function prosesDanKompresGambar(inputElemen) {
             const file = inputElemen.files[0];
             if (file) {
@@ -63,41 +113,23 @@ function initAplikasi() {
                     const img = new Image();
                     img.src = e.target.result;
                     img.onload = function() {
-                        // Setup Canvas untuk resize
                         const canvas = document.createElement('canvas');
                         let width = img.width;
                         let height = img.height;
-
-                        // Batasi resolusi maksimal lebar/tinggi ke 1000 pixel agar ringan
                         const MAX_WIDTH = 1000;
                         const MAX_HEIGHT = 1000;
 
                         if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                         } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
                         }
-
                         canvas.width = width;
                         canvas.height = height;
-
-                        // Gambar ulang foto ke dalam canvas dengan resolusi baru
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-
-                        // Konversi ke Base64 dengan format JPEG dan kualitas 0.7 (70%)
-                        // Ini akan memotong ukuran file secara drastis tanpa merusak detail penting
                         fotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
-
-                        // Tampilkan hasil kompresi di preview
                         previewKontainer.innerHTML = `<img src="${fotoBase64}" alt="Preview" style="max-width:100%; border-radius:8px;">`;
-                        console.log("Gambar berhasil dikompresi otomatis.");
                     };
                 };
                 reader.readAsDataURL(file);
@@ -105,24 +137,13 @@ function initAplikasi() {
         }
 
         if (fotoKamera && fotoGaleri) {
-            fotoKamera.addEventListener("change", function() {
-                prosesDanKompresGambar(this);
-                fotoGaleri.value = ""; 
-            });
-
-            fotoGaleri.addEventListener("change", function() {
-                prosesDanKompresGambar(this);
-                fotoKamera.value = ""; 
-            });
+            fotoKamera.addEventListener("change", function() { prosesDanKompresGambar(this); if(fotoGaleri) fotoGaleri.value = ""; });
+            fotoGaleri.addEventListener("change", function() { prosesDanKompresGambar(this); if(fotoKamera) fotoKamera.value = ""; });
         }
 
         formLaporan.addEventListener("submit", async (e) => {
             e.preventDefault();
-            
-            if (!fotoBase64) {
-                alert("Silakan ambil foto lewat kamera atau pilih dari galeri terlebih dahulu!");
-                return;
-            }
+            if (!fotoBase64) { alert("Silakan ambil foto lewat kamera atau pilih dari galeri terlebih dahulu!"); return; }
             
             btnKirim.disabled = true;
             btnKirim.innerText = "Mengirim...";
@@ -130,7 +151,6 @@ function initAplikasi() {
             const sekarang = new Date();
             const tanggal = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
             const waktu = sekarang.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + " WIB";
-
             const latitude = document.getElementById("lat").value || "Tidak diketahui";
             const longitude = document.getElementById("lng").value || "Tidak diketahui";
 
@@ -147,16 +167,20 @@ function initAplikasi() {
                     timestamp: Date.now()
                 });
 
-                alert("Laporan & Lokasi GPS berhasil dikirim ke Orang B!");
+                alert("Laporan berhasil dikirim!");
                 formLaporan.reset();
                 previewKontainer.innerHTML = "";
                 fotoBase64 = "";
                 if(fotoKamera) fotoKamera.value = "";
                 if(fotoGaleri) fotoGaleri.value = "";
+                
+                // Kembalikan tampilan status lokasi ke semula untuk laporan berikutnya
+                document.getElementById("lat").value = "";
+                document.getElementById("lng").value = "";
                 mintaAksesLokasi(); 
             } catch (error) {
                 console.error("Error mengirim:", error);
-                alert("Gagal mengirim laporan. Pastikan koneksi bagus dan aturan Firebase benar.");
+                alert("Gagal mengirim laporan.");
             } finally {
                 btnKirim.disabled = false;
                 btnKirim.innerText = "Kirim Laporan";
@@ -182,7 +206,7 @@ function initAplikasi() {
                 kartu.className = "kartu-laporan";
                 
                 const adaLokasi = lap.lat && lap.lng && lap.lat !== "Tidak diketahui";
-                const linkMaps = adaLokasi ? `https://maps.google.com/?q=${lap.lat},${lap.lng}` : "#";
+const linkMaps = adaLokasi ? `https://www.google.com/maps?q=${lap.lat},${lap.lng}` : "#";
 
                 kartu.innerHTML = `
                     <div class="kartu-header">
