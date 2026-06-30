@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halaman Pelapor (Orang A)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Sistem Pelaporan</h1>
+        <p class="subtitle">Panel Khusus Orang A (Pelapor)</p>
+        
+        <hr>
+
+        <section class="panel-pelapor">
+            <h2>Buat Laporan Baru</h2>
+            <form id="formLaporan">
+                <input type="hidden" id="lat">
+                <input type="hidden" id="lng">
+
+                <div class="form-group">
+                    <label for="namaPelapor">Nama Pelapor:</label>
+                    <input type="text" id="namaPelapor" required placeholder="Contoh: Diego">
+                </div>
+
+                <div class="form-group">
+                    <label for="lokasi">Lokasi Kejadian (Patokan/Blok):</label>
+                    <input type="text" id="lokasi" required placeholder="Contoh: SGP 2 Blok A 28">
+                </div>
+
+<div class="form-group">
+    <label>Foto Kendaraan / Masalah:</label>
+    <input type="file" id="fotoKamera" accept="image/*" capture="environment" style="display: none;">
+    <input type="file" id="fotoGaleri" accept="image/*" style="display: none;">
+    
+    <div class="button-foto-group" style="display: flex; gap: 10px; margin-top: 5px;">
+        <button type="button" id="btnKamera" class="btn-secondary" style="flex: 1; background-color: #0ea5e9;">📸 Ambil Foto (Kamera)</button>
+        <button type="button" id="btnGaleri" class="btn-secondary" style="flex: 1; background-color: #64748b;">📁 Pilih dari Galeri</button>
+    </div>
+    
+    <div id="previewKontainer" style="margin-top: 10px;"></div>
+</div>
+
+                <!--<div class="form-group">
+                    <label for="foto">Foto / Masalah:</label>
+                    <input type="file" id="foto" accept="image/*" capture="environment" required>
+                    <input type="file" id="foto" accept="image/*" required>
+                    <div id="previewKontainer"></div>
+                </div>-->
+
+                <div class="form-group">
+                    <label for="catatan">Catatan / Deskripsi Masalah:</label>
+                    <textarea id="catatan" rows="4" required placeholder="Contoh: Warnanya Mau Diganti Jadi Larva Hijau"></textarea>
+                </div>
+
+                <button type="submit" id="btnKirim">Kirim Laporan</button>
+            </form>
+        </section>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaU3Lp4cqUNIU22o86MRALTCQIsM296Dc",
+            authDomain: "sistem-pelaporan-cdc7b.firebaseapp.com",
+            projectId: "sistem-pelaporan-cdc7b",
+            storageBucket: "sistem-pelaporan-cdc7b.firebasestorage.app",
+            messagingSenderId: "658590157261",
+            appId: "1:658590157261:web:1d6d7e1ef6741c5c53dc84"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.firestoreOps = { collection, addDoc };
+    </script>
+    <script src="script.js" defer></script>
+</body>
+</html>

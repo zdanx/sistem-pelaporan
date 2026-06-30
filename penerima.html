@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halaman Penerima (Orang B)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Sistem Pelaporan Kendaraan</h1>
+        <p class="subtitle">Panel Khusus Orang B (Penerima) - Real-time Cloud</p>
+        
+        <hr>
+
+        <section class="panel-penerima">
+            <h2>Daftar Masuk Laporan</h2>
+            <div id="daftarLaporan" class="daftar-laporan">
+                <p class="text-kosong">Menghubungkan ke database...</p>
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Kredensial Firebase Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaU3Lp4cqUNIU22o86MRALTCQIsM296Dc",
+            authDomain: "sistem-pelaporan-cdc7b.firebaseapp.com",
+            projectId: "sistem-pelaporan-cdc7b",
+            storageBucket: "sistem-pelaporan-cdc7b.firebasestorage.app",
+            messagingSenderId: "658590157261",
+            appId: "1:658590157261:web:1d6d7e1ef6741c5c53dc84"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.firestoreOps = { collection, query, orderBy, onSnapshot };
+    </script>
+    <script src="script.js" defer></script>
+</body>
+</html>
